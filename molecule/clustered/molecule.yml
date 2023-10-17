@@ -1,0 +1,81 @@
+---
+# Copyright (C) 2020-2022 Robert Wimmer
+# Copyright (C) 2020 Pierre Ozoux
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+dependency:
+  name: galaxy
+
+driver:
+  name: vagrant
+  provider:
+    name: libvirt
+    type: libvirt
+
+platforms:
+  - name: storage-1
+    box: generic/ubuntu2204
+    memory: 1024
+    cpus: 1
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 192.168.10.10
+    groups:
+      - storage_nodes
+      - ubuntu
+  - name: storage-2
+    box: generic/ubuntu2004
+    memory: 1024
+    cpus: 1
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 192.168.10.12
+    groups:
+      - storage_nodes
+      - ubuntu
+  - name: storage-3
+    box: generic/ubuntu1804
+    memory: 1024
+    cpus: 1
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 192.168.10.14
+    groups:
+      - storage_nodes
+      - ubuntu
+  - name: storage-4
+    box: generic/debian11
+    memory: 1024
+    cpus: 1
+    interfaces:
+      - auto_config: true
+        network_name: private_network
+        type: static
+        ip: 192.168.10.16
+    groups:
+      - storage_nodes
+      - debian
+
+provisioner:
+  name: ansible
+  connection_options:
+    ansible_ssh_user: vagrant
+    ansible_become: true
+  log: true
+  lint:
+    name: ansible-lint
+
+scenario:
+  name: clustered
+  test_sequence:
+    - prepare
+    - converge
+
+verifier:
+  name: ansible

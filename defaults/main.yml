@@ -1,5 +1,5 @@
 ---
-microceph_version: latest/edge
+microceph_version: latest/beta
 microceph_cluster_nodes: storage_nodes
 microceph_seed_node: ceph-node-1
 microceph_encrypt_data: True

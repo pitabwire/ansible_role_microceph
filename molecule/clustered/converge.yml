@@ -1,0 +1,10 @@
+---
+
+- hosts: storage_nodes
+  remote_user: vagrant
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Include Microceph role
+      ansible.builtin.include_role:
+        name: pitabwire.ansible_role_microceph

@@ -1,19 +1,42 @@
 ---
-role_name_check: 1
+
 dependency:
   name: galaxy
+
 driver:
-  name: docker
+  name: ${LSR_MOLECULE_DRIVER:-docker}
+
+lint: |
+  set -e
+  yamllint .
+  ansible-lint .
+
 platforms:
-  - name: instance
-    image: "geerlingguy/docker-${MOLECULE_DISTRO:-centos7}-ansible:latest"
+  - name: "single-node-${MOLECULE_DISTRO:-ubuntu2204}"
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2204}-ansible:latest"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:rw
-    cgroupns_mode: host
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
     privileged: true
     pre_build_image: true
+    groups:
+      - storage_nodes
+      - "${MOLECULE_DISTRO_FAMILY:-ubuntu}"
+
 provisioner:
   name: ansible
-  playbooks:
-    converge: ${MOLECULE_PLAYBOOK:-converge.yml}
+  log: true
+  lint:
+    name: ansible-lint
+  inventory:
+    links:
+      hosts: inventory.yml
+
+scenario:
+  name: default
+  test_sequence:
+    - prepare
+    - converge
+
+verifier:
+  name: ansible

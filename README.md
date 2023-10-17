@@ -71,7 +71,7 @@ will run `microceph cluster join <join token>`, more info on this can be found h
     ```
 * Install Molecule with lint and Docker options
     ```
-    $ pip install 'molecule[lint,docker]'
+    $ pip install molecule molecule-plugins[vagrant]
     ```
 * Install up-to-date Ansible package if necessary
     ```
