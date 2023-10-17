@@ -1,0 +1,16 @@
+---
+
+- name: Set ceph replica count to be 2
+  ansible.builtin.command:
+    cmd: microceph.ceph config set global osd_pool_default_size 2
+  changed_when: false
+
+- name: Set ceph manager config appropriately
+  ansible.builtin.command:
+    cmd: microceph.ceph config set mgr mgr_standby_modules false
+  changed_when: false
+
+- name: Set the bucket type to use for chooseleaf in a CRUSH rule to 0
+  ansible.builtin.command:
+    cmd: microceph.ceph config set osd osd_crush_chooseleaf_type 0
+  changed_when: false

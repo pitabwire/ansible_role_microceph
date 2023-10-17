@@ -1,0 +1,103 @@
+---
+
+- name: Enumerate all ceph cluster hosts within the hosts file
+  blockinfile:
+    dest: /etc/hosts
+    marker: "# {mark} ANSIBLE MANAGED: ceph cluster hosts"
+    content: |
+      {% for host in groups[microceph_cluster_nodes] %}
+      {{ hostvars[host].ansible_default_ipv4.address }} {{ host }}
+      {% endfor %}
+
+
+- name: Find the seed host from clusture node group
+  set_fact:
+    microceph_seed_node: '{{ (groups[microceph_cluster_nodes]|sort)[0] }}'
+  when:
+    - microceph_seed_node == ""
+
+
+- name: Test microceph status on cluster
+  ansible.builtin.command: "microceph.ceph status"
+  register: ceph_cluster_status
+  ignore_errors: true
+  when:
+    - inventory_hostname == microceph_seed_node
+
+- name: Bootstrap the master microceph node
+  ansible.builtin.command: "microceph cluster bootstrap"
+  when:
+    - inventory_hostname == microceph_seed_node
+    - ceph_cluster_status.rc > 0
+
+- block:
+
+    - name: Test if microceph not already joined to cluster
+      ansible.builtin.command: "microceph.ceph status"
+      delegate_to: "{{ microceph_seed_node }}"
+      register: pre_join_ceph_cluster_status
+
+    - name: Create microceph directory if non existent
+      ansible.builtin.file:
+        path: /etc/microceph/
+        state: directory
+        mode: '0755'
+
+    - name: check if join token file exists
+      stat:
+        path: /etc/microceph/join.token
+      register: join_token_file
+
+    - name: Get microceph cluster join token from master
+      ansible.builtin.command: "microceph cluster add {{ inventory_hostname }}"
+      delegate_to: "{{ microceph_seed_node }}"
+      changed_when: false
+      when:
+        - join_token_file.stat.exists == False
+      register: microceph_join_token_output
+
+    - name: Store the join token in a file for later use
+      ansible.builtin.copy:
+        content: "{{ microceph_join_token_output.stdout }}"
+        dest: /etc/microceph/join.token
+      when:
+        - join_token_file.stat.exists == False
+
+    - name: Load join token data into memory data
+      ansible.builtin.command:
+        cmd: cat /etc/microceph/join.token
+      register: microceph_join_token
+
+    - name: Setting join token fact
+      ansible.builtin.set_fact:
+        microceph_join_token: "{{ microceph_join_token.stdout }}"
+
+    - name: check if join token file exists
+      stat:
+        path: /etc/microceph/join.success
+      register: join_success_file
+
+    - name: Join microceph node to master cluster nodes
+      ansible.builtin.command:
+        cmd: "microceph cluster join {{ microceph_join_token }}"
+      register: microceph_join_success_output
+      when:
+        join_success_file.stat.exists == False
+
+    - name: Confirm node joined microceph cluster
+      ansible.builtin.command:
+        cmd: "microceph.ceph status"
+      delegate_to: "{{ microceph_seed_node }}"
+
+    - name: Store join success details in a file for reference
+      ansible.builtin.copy:
+        content: "{{ microceph_join_success_output.stdout }}"
+        dest: /etc/microceph/join.success
+      when:
+        - join_success_file.stat.exists == False
+
+  when:
+    - inventory_hostname != microceph_seed_node
+    - inventory_hostname in groups[microceph_cluster_nodes]
+
+

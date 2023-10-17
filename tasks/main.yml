@@ -1,0 +1,21 @@
+---
+- name: Install micro ceph
+  ansible.builtin.include_tasks: install.yml
+
+- name: Build cluster ceph nodes
+  ansible.builtin.include_tasks: setup_cluster.yml
+
+- name: Install ceph storage disks on node
+  ansible.builtin.include_tasks: setup_disks.yml
+  loop: "{{ microceph_disk_devices }}"
+  loop_control:
+    loop_var: disk_device
+
+- name: Set appropriate crush rules
+  ansible.builtin.include_tasks: crush_rules.yml
+
+
+
+
+
+

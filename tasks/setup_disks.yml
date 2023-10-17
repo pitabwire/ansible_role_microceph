@@ -1,0 +1,24 @@
+---
+
+- name: check if device exists
+  stat:
+    path: "{{ disk_device }}"
+  register: ceph_data_disk
+
+- name: List disk on microceph cluster
+  ansible.builtin.command:
+    cmd: "microceph disk list"
+  register: microceph_disk_list
+
+- name: Set a fact that can be used to search hostname and device
+  ansible.builtin.set_fact:
+    disk_host_ceph: "{{ ansible_hostname }} | {{ disk_device }}"
+
+
+- name: Active node add data disk to cluster
+  ansible.builtin.command:
+    cmd: "microceph disk add {{ disk_device }} --wipe  --encrypt"
+  when:
+    - ceph_data_disk.stat.exists == True
+    - disk_host_ceph not in microceph_disk_list.stdout
+
