@@ -7,7 +7,7 @@
 - name: Make sure snapd the latest and bleeding
   ansible.builtin.snap:
     name: snapd
-    channel: latest/edge
+    channel: "{{ microceph_snapd_version }}"
     state: present
   notify:
     - Restart microceph daemon

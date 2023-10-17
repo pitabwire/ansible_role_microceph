@@ -99,5 +99,3 @@
   when:
     - inventory_hostname != microceph_seed_node
     - inventory_hostname in groups[microceph_cluster_nodes]
-
-
