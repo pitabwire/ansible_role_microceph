@@ -15,10 +15,20 @@
     disk_host_ceph: "{{ ansible_hostname }} | {{ disk_device }}"
 
 
-- name: Active node add data disk to cluster
+- name: Active node add encrypted data disk to cluster
   ansible.builtin.command:
     cmd: "microceph disk add {{ disk_device }} --wipe  --encrypt"
   when:
     - ceph_data_disk.stat.exists == True
     - disk_host_ceph not in microceph_disk_list.stdout
+    - microceph_encrypt_data == True
+
+
+- name: Active node add unencrypted data disk to cluster
+  ansible.builtin.command:
+    cmd: "microceph disk add {{ disk_device }} --wipe"
+  when:
+    - ceph_data_disk.stat.exists == True
+    - disk_host_ceph not in microceph_disk_list.stdout
+    - microceph_encrypt_data != True
 

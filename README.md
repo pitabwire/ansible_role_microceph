@@ -29,6 +29,7 @@ defined in `[defaults/main.yml](defaults/main.yml)`.
 * `microceph_cluster_nodes`: Hostgroup whose members will form ceph cluster
 * `microceph_seed_node`: Node name that will be used to start cluster formation
 * `microceph_encrypt_data`: Encrypt all the data in the microceph drive at rest see : [Full disk encryption](https://canonical-microceph.readthedocs-hosted.com/en/latest/explanation/fde-osd/) 
+* `microceph_disk_devices`: List of all the devices the role should add as osds once the nodes join. Make sure they exist prior otherwise the playbook will skip.
 
 ### Playbook example
 
@@ -40,6 +41,7 @@ defined in `[defaults/main.yml](defaults/main.yml)`.
         microceph_cluster_nodes: ceph_nodes
         microceph_seed_node: ceph-node-1
         microceph_encrypt_data: False
+
 ```
 
 
